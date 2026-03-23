@@ -1,0 +1,96 @@
+using ArchUnitNET.Domain;
+using ArchUnitNET.Fluent;
+using ArchUnitNET.Loader;
+using ArchUnitNET.TUnit;
+using TUnit;
+
+namespace {{SOLUTION_NAME}}.Architecture.Tests;
+
+/// <summary>
+/// Enforces Clean Architecture dependency rules for {{SOLUTION_NAME}}.
+/// Any violation causes make test to fail with a descriptive error message.
+/// </summary>
+public class ArchitectureTests
+{
+    private static readonly ArchUnitNET.Domain.Architecture _architecture =
+        new ArchLoader()
+            .LoadAssemblies(
+                typeof({{SOLUTION_NAME}}.Domain.AssemblyMarker).Assembly,
+                typeof({{SOLUTION_NAME}}.Application.AssemblyMarker).Assembly,
+                typeof({{SOLUTION_NAME}}.Infrastructure.AssemblyMarker).Assembly,
+                typeof({{SOLUTION_NAME}}.Presentation.AssemblyMarker).Assembly
+            )
+            .Build();
+
+    private static readonly IObjectProvider<IType> _domainLayer =
+        ArchRuleDefinition.Types().That()
+            .ResideInAssembly(typeof({{SOLUTION_NAME}}.Domain.AssemblyMarker).Assembly)
+            .As("Domain Layer");
+
+    private static readonly IObjectProvider<IType> _applicationLayer =
+        ArchRuleDefinition.Types().That()
+            .ResideInAssembly(typeof({{SOLUTION_NAME}}.Application.AssemblyMarker).Assembly)
+            .As("Application Layer");
+
+    private static readonly IObjectProvider<IType> _infrastructureLayer =
+        ArchRuleDefinition.Types().That()
+            .ResideInAssembly(typeof({{SOLUTION_NAME}}.Infrastructure.AssemblyMarker).Assembly)
+            .As("Infrastructure Layer");
+
+    private static readonly IObjectProvider<IType> _presentationLayer =
+        ArchRuleDefinition.Types().That()
+            .ResideInAssembly(typeof({{SOLUTION_NAME}}.Presentation.AssemblyMarker).Assembly)
+            .As("Presentation Layer");
+
+    [Test]
+    public void Domain_ShouldNotDependOnAnyOtherLayer()
+    {
+        IArchRule rule = ArchRuleDefinition.Types().That().Are(_domainLayer)
+            .Should().NotDependOnAny(_applicationLayer)
+            .AndShould().NotDependOnAny(_infrastructureLayer)
+            .AndShould().NotDependOnAny(_presentationLayer)
+            .Because("Domain is the innermost layer and must have no outward dependencies.");
+
+        rule.Check(_architecture);
+    }
+
+    [Test]
+    public void Application_ShouldNotDependOnInfrastructure()
+    {
+        IArchRule rule = ArchRuleDefinition.Types().That().Are(_applicationLayer)
+            .Should().NotDependOnAny(_infrastructureLayer)
+            .Because("Application defines ports/interfaces; Infrastructure implements them — not the other way around.");
+
+        rule.Check(_architecture);
+    }
+
+    [Test]
+    public void Application_ShouldNotDependOnPresentation()
+    {
+        IArchRule rule = ArchRuleDefinition.Types().That().Are(_applicationLayer)
+            .Should().NotDependOnAny(_presentationLayer)
+            .Because("Application must be independent of delivery mechanisms (Presentation layer).");
+
+        rule.Check(_architecture);
+    }
+
+    [Test]
+    public void Presentation_ShouldNotDependOnDomainDirectly()
+    {
+        IArchRule rule = ArchRuleDefinition.Types().That().Are(_presentationLayer)
+            .Should().NotDependOnAny(_domainLayer)
+            .Because("Presentation must depend only on Application, never directly on Domain.");
+
+        rule.Check(_architecture);
+    }
+
+    [Test]
+    public void Presentation_ShouldNotDependOnInfrastructure()
+    {
+        IArchRule rule = ArchRuleDefinition.Types().That().Are(_presentationLayer)
+            .Should().NotDependOnAny(_infrastructureLayer)
+            .Because("Presentation must depend only on Application; Infrastructure is an implementation detail.");
+
+        rule.Check(_architecture);
+    }
+}

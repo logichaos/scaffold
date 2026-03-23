@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>{{TARGET_FRAMEWORK}}</TargetFramework>
+    <RootNamespace>{{SOLUTION_NAME}}.Architecture.Tests</RootNamespace>
+    <AssemblyName>{{SOLUTION_NAME}}.Architecture.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Domain/{{SOLUTION_NAME}}.Domain.csproj" />
+    <ProjectReference Include="../../src/Application/{{SOLUTION_NAME}}.Application.csproj" />
+    <ProjectReference Include="../../src/Infrastructure/{{SOLUTION_NAME}}.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Presentation/{{SOLUTION_NAME}}.Presentation.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="TngTech.ArchUnitNET.TUnit" />
+  </ItemGroup>
+</Project>

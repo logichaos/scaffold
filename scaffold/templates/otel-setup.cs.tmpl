@@ -1,0 +1,58 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+namespace {{SOLUTION_NAME}}.Presentation;
+
+/// <summary>
+/// OpenTelemetry setup extensions for the Presentation layer.
+/// Configures tracing, metrics, and logging with OTLP export.
+///
+/// Prometheus /metrics is handled separately by prometheus-net.AspNetCore
+/// (see PrometheusEndpoint.cs).
+///
+/// Environment variables:
+///   OTEL_EXPORTER_OTLP_ENDPOINT  — OTLP collector endpoint (e.g. http://localhost:4317)
+///   OTEL_SERVICE_NAME            — Service name in traces (default: {{SOLUTION_NAME}})
+/// </summary>
+public static class OtelSetup
+{
+    public static WebApplicationBuilder AddOpenTelemetry(this WebApplicationBuilder builder)
+    {
+        var serviceName = Environment.GetEnvironmentVariable("OTEL_SERVICE_NAME")
+                          ?? "{{SOLUTION_NAME}}";
+
+        var resourceBuilder = ResourceBuilder.CreateDefault()
+            .AddService(serviceName)
+            .AddTelemetrySdk()
+            .AddEnvironmentVariableDetector();
+
+        builder.Services.AddOpenTelemetry()
+            .WithTracing(tracing => tracing
+                .SetResourceBuilder(resourceBuilder)
+                .AddAspNetCoreInstrumentation(opts =>
+                {
+                    opts.RecordException = true;
+                    // Filter health-check and metrics endpoint noise
+                    opts.Filter = ctx =>
+                        !ctx.Request.Path.StartsWithSegments("/health") &&
+                        !ctx.Request.Path.StartsWithSegments("/metrics");
+                })
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter())
+            .WithMetrics(metrics => metrics
+                .SetResourceBuilder(resourceBuilder)
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddRuntimeInstrumentation()
+                .AddOtlpExporter())
+            .WithLogging(logging => logging
+                .SetResourceBuilder(resourceBuilder)
+                .AddOtlpExporter());
+
+        return builder;
+    }
+}

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>{{TARGET_FRAMEWORK}}</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- BenchmarkDotNet requires Release mode -->
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <!-- Reference the Presentation project to benchmark real endpoints/handlers -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Presentation\{{SOLUTION_NAME}}.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,65 @@
+name: Observability Validation
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  otel-config-check:
+    name: OpenTelemetry — Configuration Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Verify OTEL packages present
+        run: |
+          OUTPUT=$(dotnet list package 2>&1)
+          echo "${OUTPUT}"
+          if ! echo "${OUTPUT}" | grep -q "OpenTelemetry"; then
+            echo "::warning::OpenTelemetry packages not found in any project. Add observability via --observability flag."
+          else
+            echo "::notice::OpenTelemetry packages detected."
+          fi
+
+      - name: Verify Prometheus endpoint defined
+        run: |
+          if ! grep -r "MapMetrics\|UsePrometheusEndpoint" src/ 2>/dev/null | grep -q .; then
+            echo "::warning::Prometheus /metrics endpoint not found in src/. Check PrometheusEndpoint setup."
+          else
+            echo "::notice::Prometheus metrics endpoint wired."
+          fi
+
+      - name: Verify Grafana dashboard template exists
+        run: |
+          if ! find docs/dashboards -name "*.json" 2>/dev/null | grep -q .; then
+            echo "::warning::No Grafana dashboard JSON found under docs/dashboards/. Import grafana-dashboard.json.tmpl."
+          else
+            echo "::notice::Grafana dashboard template present."
+          fi
+
+  metric-threshold-guidance:
+    name: Metric Thresholds — Documentation Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check README documents observability targets
+        run: |
+          if ! grep -q "p95\|p99\|OTEL_EXPORTER" README.md 2>/dev/null; then
+            echo "::warning::README.md does not document observability SLA targets or OTEL env vars."
+          else
+            echo "::notice::Observability SLA targets documented in README.md."
+          fi

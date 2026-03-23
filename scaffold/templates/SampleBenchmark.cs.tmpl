@@ -1,0 +1,50 @@
+using BenchmarkDotNet.Attributes;
+
+namespace {{SOLUTION_NAME}}.Benchmarks;
+
+/// <summary>
+/// Baseline benchmark harness.
+/// Replace or extend with real use-case benchmarks.
+///
+/// Suggested SLA targets (adjust per service):
+///   p95 latency  : &lt; 200 ms
+///   p99 latency  : &lt; 500 ms
+///   Throughput   : >= 1 000 RPS (simple, in-process operations)
+/// </summary>
+[MemoryDiagnoser]
+[SimpleJob(warmupCount: 3, iterationCount: 10)]
+public class SampleBenchmark
+{
+    // ------------------------------------------------------------------
+    // Setup — replace with real service / handler under test
+    // ------------------------------------------------------------------
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        // TODO: Build DI container / host and resolve the handler/service to benchmark.
+        // Example:
+        //   var host = Host.CreateDefaultBuilder()
+        //       .ConfigureServices(s => s.AddApplication())
+        //       .Build();
+        //   _handler = host.Services.GetRequiredService<MyQueryHandler>();
+    }
+
+    // ------------------------------------------------------------------
+    // Benchmarks
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Placeholder — replace with actual operation under measurement.
+    /// Target: p95 &lt; 200 ms, p99 &lt; 500 ms.
+    /// </summary>
+    [Benchmark(Baseline = true)]
+    public int PlaceholderOperation()
+    {
+        // TODO: Replace with the real operation, e.g.:
+        //   return await _handler.Handle(new MyQuery(), CancellationToken.None);
+        var sum = 0;
+        for (var i = 0; i < 1_000; i++) sum += i;
+        return sum;
+    }
+}

@@ -1,0 +1,35 @@
+title = "GitLeaks Configuration for .NET Projects"
+
+[extend]
+useDefault = true  # Extend the default ruleset
+
+[[rules]]
+id = "dotnet-connection-string"
+description = "Potential .NET connection string with credentials"
+regex = '''(?i)(server|data source|initial catalog|user id|password)\s*=\s*[^\s;]{4,}'''
+tags = ["connection-string", "credentials"]
+[rules.allowlist]
+regexes = [
+  '''(localhost|127\.0\.0\.1|\.\.\.|\*\*\*|xxx|example)''',  # Test/placeholder values
+  '''(\$\{|\$\(|%[A-Z_]+%)''',  # Environment variable references
+]
+
+[[rules]]
+id = "dotnet-appsettings-secret"
+description = "Possible secret value in appsettings*.json"
+regex = '''"(Password|Secret|ApiKey|Token|ConnectionString|PrivateKey)"\s*:\s*"[^"]{8,}"'''
+paths = ["**/appsettings*.json"]
+tags = ["config", "credentials"]
+[rules.allowlist]
+regexes = [
+  '''"(Password|Secret|ApiKey|Token)"\s*:\s*"(\*+|xxx+|your[-_].*|<.*>|example.*|placeholder.*)"''',
+]
+
+[allowlist]
+description = "Global allowlist for scaffold and test artifacts"
+paths = [
+  "scaffold/templates/**",  # Template files with placeholder tokens
+  "scaffold/tests/**",      # Test files may contain fake credentials
+  "**/README.md",
+  "**/*.md",
+]

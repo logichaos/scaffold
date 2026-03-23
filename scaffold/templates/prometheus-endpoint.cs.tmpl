@@ -1,0 +1,32 @@
+using Microsoft.AspNetCore.Builder;
+using Prometheus;
+
+namespace {{SOLUTION_NAME}}.Presentation;
+
+/// <summary>
+/// Prometheus metrics endpoint setup using prometheus-net.AspNetCore.
+/// Exposes /metrics for scraping by Prometheus.
+///
+/// Registered in Program.cs via:
+///   builder.Services.AddSingleton(...)  // no explicit registration needed
+///   app.UsePrometheusMetricsEndpoint();
+/// </summary>
+public static class PrometheusEndpoint
+{
+    /// <summary>
+    /// Registers the Prometheus HTTP metrics middleware and /metrics scrape endpoint.
+    /// </summary>
+    public static WebApplication UsePrometheusMetricsEndpoint(this WebApplication app)
+    {
+        // Collect HTTP request metrics automatically for all routes
+        app.UseHttpMetrics(options =>
+        {
+            options.AddCustomLabel("host", ctx => ctx.Request.Host.Host);
+        });
+
+        // Expose the /metrics scrape endpoint
+        app.MapMetrics("/metrics");
+
+        return app;
+    }
+}

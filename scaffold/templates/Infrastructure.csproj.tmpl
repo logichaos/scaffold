@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>{{TARGET_FRAMEWORK}}</TargetFramework>
+    <RootNamespace>{{SOLUTION_NAME}}.Infrastructure</RootNamespace>
+    <AssemblyName>{{SOLUTION_NAME}}.Infrastructure</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Application/{{SOLUTION_NAME}}.Application.csproj" />
+    <ProjectReference Include="../Domain/{{SOLUTION_NAME}}.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

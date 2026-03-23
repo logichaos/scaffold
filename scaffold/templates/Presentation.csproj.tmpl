@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>{{TARGET_FRAMEWORK}}</TargetFramework>
+    <RootNamespace>{{SOLUTION_NAME}}.Presentation</RootNamespace>
+    <AssemblyName>{{SOLUTION_NAME}}.Presentation</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Presentation depends only on Application — never on Infrastructure or Domain directly -->
+    <ProjectReference Include="../Application/{{SOLUTION_NAME}}.Application.csproj" />
+  </ItemGroup>
+</Project>

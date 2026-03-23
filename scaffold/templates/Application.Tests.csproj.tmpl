@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>{{TARGET_FRAMEWORK}}</TargetFramework>
+    <RootNamespace>{{SOLUTION_NAME}}.Application.Tests</RootNamespace>
+    <AssemblyName>{{SOLUTION_NAME}}.Application.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <!-- Ignore exit code 8 (zero tests ran) during initial scaffold; remove once tests are added -->
+    <TestingPlatformCommandLineArguments>--ignore-exit-code 8</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Application/{{SOLUTION_NAME}}.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+</Project>

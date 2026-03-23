@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "security"
+    # Fail CI on Critical/High vulnerabilities — see ci-security.yml
+    ignore:
+      []  # Remove entries here to un-ignore specific packages

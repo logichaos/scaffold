@@ -1,0 +1,83 @@
+name: Performance Budgets
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  BUILD_BUDGET_SECONDS: 300   # 5-minute build + test budget (warn-only)
+
+jobs:
+  build-test-budget:
+    name: Build & Test — 5-min Budget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (timed)
+        id: build
+        run: |
+          START=$(date +%s)
+          dotnet build --configuration Release --no-restore
+          END=$(date +%s)
+          ELAPSED=$((END - START))
+          echo "elapsed=${ELAPSED}" >> "$GITHUB_OUTPUT"
+          echo "Build took ${ELAPSED}s"
+          if [ "${ELAPSED}" -gt "${BUILD_BUDGET_SECONDS}" ]; then
+            echo "::warning::Build exceeded ${BUILD_BUDGET_SECONDS}s budget (took ${ELAPSED}s)"
+          fi
+
+      - name: Test (timed, with flaky retry)
+        id: test
+        run: |
+          START=$(date +%s)
+          # TUnit supports retry-failed; adjust count per project tolerance
+          dotnet test --configuration Release --no-build \
+            --logger "trx;LogFileName=test-results.trx" \
+            -- TUnit.retry-failed-max-count=2 || true
+          END=$(date +%s)
+          ELAPSED=$((END - START))
+          echo "elapsed=${ELAPSED}" >> "$GITHUB_OUTPUT"
+          echo "Test run took ${ELAPSED}s"
+          if [ "${ELAPSED}" -gt "${BUILD_BUDGET_SECONDS}" ]; then
+            echo "::warning::Test run exceeded ${BUILD_BUDGET_SECONDS}s budget (took ${ELAPSED}s)"
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/*.trx"
+          retention-days: 14
+
+      - name: Budget summary
+        if: always()
+        run: |
+          BUILD_ELAPSED="${{ steps.build.outputs.elapsed }}"
+          TEST_ELAPSED="${{ steps.test.outputs.elapsed }}"
+          TOTAL=$((BUILD_ELAPSED + TEST_ELAPSED))
+          echo "### CI Budget Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Step | Time (s) | Budget (s) | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|----------|------------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${BUILD_ELAPSED}" -gt "${BUILD_BUDGET_SECONDS}" ]; then
+            echo "| Build | ${BUILD_ELAPSED} | ${BUILD_BUDGET_SECONDS} | ⚠️ Over budget |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| Build | ${BUILD_ELAPSED} | ${BUILD_BUDGET_SECONDS} | ✅ Within budget |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${TEST_ELAPSED}" -gt "${BUILD_BUDGET_SECONDS}" ]; then
+            echo "| Test  | ${TEST_ELAPSED} | ${BUILD_BUDGET_SECONDS} | ⚠️ Over budget |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| Test  | ${TEST_ELAPSED} | ${BUILD_BUDGET_SECONDS} | ✅ Within budget |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "| **Total** | **${TOTAL}** | | |" >> "$GITHUB_STEP_SUMMARY"

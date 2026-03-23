@@ -1,0 +1,42 @@
+# .gitignore for .NET Project Scaffold repository
+
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+packages/
+*.nupkg
+*.snupkg
+
+# Coverage & test results
+coverage-results/
+*.coverage
+*.coveragexml
+TestResults/
+
+# IDE
+.vs/
+.vscode/settings.json
+.idea/
+*.DotSettings.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.tmp
+*.swp
+
+# Secrets / environment overrides (never commit)
+.env
+.env.*
+!.env.example
+*.secret
+
+# Generated scaffold output (ignored if created in-repo during testing)
+/tmp/

@@ -1,0 +1,20 @@
+#!/bin/sh
+# {{SOLUTION_NAME}}-sbom-generate.sh — Generate CycloneDX SBOM
+# Run: make sbom
+set -euo pipefail
+
+DOTNET="${DOTNET:-dotnet}"
+OUTPUT_FILE="${1:-sbom.cdx.json}"
+
+echo "[INFO] Generating SBOM (CycloneDX JSON): ${OUTPUT_FILE}"
+
+# Install cyclonedx tool if not present
+if ! "${DOTNET}" tool list --global | grep -q "cyclonedx"; then
+  echo "[INFO] Installing dotnet-CycloneDX tool..."
+  "${DOTNET}" tool install --global CycloneDX
+fi
+
+"${DOTNET}" CycloneDX *.sln --out "${OUTPUT_FILE}" --json
+
+echo "[INFO] SBOM written to: ${OUTPUT_FILE}"
+echo "[INFO] Review ${OUTPUT_FILE} for dependency inventory before deployment."

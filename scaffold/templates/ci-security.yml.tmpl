@@ -1,0 +1,73 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  sca-scan:
+    name: SCA — Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Check for vulnerable packages
+        run: |
+          OUTPUT=$(dotnet list package --vulnerable --include-transitive 2>&1 || true)
+          echo "${OUTPUT}"
+          if echo "${OUTPUT}" | grep -qiE "critical|high"; then
+            echo "::error::Critical or High severity vulnerabilities found. Review and remediate before merging."
+            exit 1
+          fi
+          echo "::notice::No Critical/High vulnerabilities detected."
+
+  secret-scan:
+    name: Secret Scanning — GitLeaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
+
+      - name: GitLeaks scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # Optional for extended rules
+
+  sbom-gate:
+    name: SBOM Generation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Install CycloneDX tool
+        run: dotnet tool install --global CycloneDX
+
+      - name: Generate SBOM
+        run: dotnet CycloneDX *.sln --out sbom.cdx.json --json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.cdx.json
+          retention-days: 90
