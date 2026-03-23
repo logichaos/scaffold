@@ -25,21 +25,25 @@ public class ArchitectureTests
     private static readonly IObjectProvider<IType> _domainLayer =
         ArchRuleDefinition.Types().That()
             .ResideInAssembly(typeof({{SOLUTION_NAME}}.Domain.AssemblyMarker).Assembly)
+            .And().DoNotResideInNamespaceMatching("Microsoft\\.CodeCoverage.*")
             .As("Domain Layer");
 
     private static readonly IObjectProvider<IType> _applicationLayer =
         ArchRuleDefinition.Types().That()
             .ResideInAssembly(typeof({{SOLUTION_NAME}}.Application.AssemblyMarker).Assembly)
+            .And().DoNotResideInNamespaceMatching("Microsoft\\.CodeCoverage.*")
             .As("Application Layer");
 
     private static readonly IObjectProvider<IType> _infrastructureLayer =
         ArchRuleDefinition.Types().That()
             .ResideInAssembly(typeof({{SOLUTION_NAME}}.Infrastructure.AssemblyMarker).Assembly)
+            .And().DoNotResideInNamespaceMatching("Microsoft\\.CodeCoverage.*")
             .As("Infrastructure Layer");
 
     private static readonly IObjectProvider<IType> _presentationLayer =
         ArchRuleDefinition.Types().That()
             .ResideInAssembly(typeof({{SOLUTION_NAME}}.Presentation.AssemblyMarker).Assembly)
+            .And().DoNotResideInNamespaceMatching("Microsoft\\.CodeCoverage.*")
             .As("Presentation Layer");
 
     [Test]

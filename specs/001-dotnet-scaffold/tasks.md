@@ -180,6 +180,13 @@
 
 ---
 
+## Bug Fixes (Post-Delivery)
+
+- [x] T062 Fix `make coverage` failing with `Unknown option '--collect'`: replace `--collect:"XPlat Code Coverage"` with MTP-native `--coverage --coverage-output-format cobertura` flags in `scaffold/scripts/lib/makefile.sh`; remove unused `COVERAGE_DIR` variable; add `TestResults` to `clean` target
+- [x] T063 Fix ArchUnitNET false-positive failures under `make coverage`: MTP static instrumentation injects `Microsoft.CodeCoverage.Instrumentation.Static.Tracker.*` synthetic types into every loaded assembly. Fix by excluding them from each layer definition using `.DoNotResideInNamespaceMatching("Microsoft\\.CodeCoverage.*")` in `scaffold/templates/ArchitectureTests.cs.tmpl`. Note: `DoNotResideInNamespace(string, bool)` does not exist in ArchUnitNET 0.13.3 — the regex overload `DoNotResideInNamespaceMatching` must be used.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

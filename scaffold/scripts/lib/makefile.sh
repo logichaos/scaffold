@@ -13,7 +13,6 @@ DOTNET    := dotnet
 # Support both .sln (dotnet <10) and .slnx (dotnet 10+)
 SOLUTION  := $(firstword $(wildcard {{SOLUTION_NAME}}.sln {{SOLUTION_NAME}}.slnx))
 COVERAGE_THRESHOLD := 90
-COVERAGE_DIR := coverage-results
 
 .PHONY: build test coverage lint clean sbom benchmark
 
@@ -26,21 +25,23 @@ test:
 	$(DOTNET) test --solution $(SOLUTION) --configuration Release --no-build
 
 ## coverage: Run tests with code coverage; fail if below $(COVERAGE_THRESHOLD)%
+## Uses MTP-native --coverage flag (required for TUnit / Microsoft.Testing.Platform).
 coverage:
 	@echo "Running tests with coverage..."
 	$(DOTNET) test --solution $(SOLUTION) \
-	  --collect:"XPlat Code Coverage" \
-	  --results-directory $(COVERAGE_DIR) \
+	  --coverage \
+	  --coverage-output coverage.cobertura.xml \
+	  --coverage-output-format cobertura \
 	  --configuration Release \
 	  --no-build 2>&1 | tee /tmp/.coverage-output || true
-	@if grep -q "No test is available" /tmp/.coverage-output 2>/dev/null; then \
+	@if grep -q "Zero tests ran\|No test is available" /tmp/.coverage-output 2>/dev/null; then \
 	  echo "coverage: no tests found — failing at 0% (threshold $(COVERAGE_THRESHOLD)%)"; \
 	  exit 1; \
 	fi
-	@# Parse line coverage from Cobertura XML
-	@COVERAGE_FILE=$$(find $(COVERAGE_DIR) -name "coverage.cobertura.xml" | head -1); \
+	@# MTP writes coverage XML alongside each test binary; find the first one
+	@COVERAGE_FILE=$$(find . -path "*/TestResults/coverage.cobertura.xml" | head -1); \
 	if [ -z "$$COVERAGE_FILE" ]; then \
-	  echo "coverage: coverage report not found"; \
+	  echo "coverage: coverage report not found (run make build first)"; \
 	  exit 1; \
 	fi; \
 	LINE_RATE=$$(grep -o 'line-rate="[0-9.]*"' "$$COVERAGE_FILE" | head -1 | grep -o '[0-9.]*'); \
@@ -58,8 +59,7 @@ lint:
 
 ## clean: Remove all build artifacts, coverage reports
 clean:
-	find . -type d \( -name bin -o -name obj \) -exec rm -rf {} + 2>/dev/null || true
-	rm -rf $(COVERAGE_DIR)
+	find . -type d \( -name bin -o -name obj -o -name TestResults \) -exec rm -rf {} + 2>/dev/null || true
 	@echo "Clean complete."
 
 ## sbom: Generate Software Bill of Materials (CycloneDX JSON)
